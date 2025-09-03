@@ -20,6 +20,7 @@
 
 use std::{sync::Arc, time::Duration};
 
+use libp2p_core::transport::PortUse;
 use quinn::{
     crypto::rustls::{QuicClientConfig, QuicServerConfig},
     MtuDiscoveryConfig, VarInt,
@@ -50,6 +51,8 @@ pub struct Config {
     /// Max unacknowledged data in bytes that may be sent in total on all streams
     /// of a connection.
     pub max_connection_data: u32,
+
+    pub force_port_use: Option<PortUse>,
 
     /// Support QUIC version draft-29 for dialing and listening.
     ///
@@ -93,6 +96,7 @@ impl Config {
             max_concurrent_stream_limit: 256,
             keep_alive_interval: Duration::from_secs(5),
             max_connection_data: 15_000_000,
+            force_port_use: Some(PortUse::New),
 
             // Ensure that one stream is not consuming the whole connection.
             max_stream_data: 10_000_000,
@@ -139,6 +143,7 @@ impl From<Config> for QuinnConfig {
             handshake_timeout: _,
             keypair,
             mtu_discovery_config,
+            ..
         } = config;
         let mut transport = quinn::TransportConfig::default();
         // Disable uni-directional streams.

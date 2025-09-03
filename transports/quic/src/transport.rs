@@ -82,6 +82,8 @@ pub struct GenTransport<P: Provider> {
     waker: Option<Waker>,
     /// Holepunching attempts
     hole_punch_attempts: HashMap<SocketAddr, oneshot::Sender<Connecting>>,
+
+    force_port_use: Option<PortUse>,
 }
 
 #[expect(deprecated)]
@@ -90,6 +92,7 @@ impl<P: Provider> GenTransport<P> {
     pub fn new(config: Config) -> Self {
         let handshake_timeout = config.handshake_timeout;
         let support_draft_29 = config.support_draft_29;
+        let force_port_use = config.force_port_use;
         let quinn_config = config.into();
         Self {
             listeners: SelectAll::new(),
@@ -99,6 +102,8 @@ impl<P: Provider> GenTransport<P> {
             waker: None,
             support_draft_29,
             hole_punch_attempts: Default::default(),
+
+            force_port_use,
         }
     }
 
@@ -264,10 +269,14 @@ impl<P: Provider> Transport for GenTransport<P> {
     fn dial(
         &mut self,
         addr: Multiaddr,
-        dial_opts: DialOpts,
+        mut dial_opts: DialOpts,
     ) -> Result<Self::Dial, TransportError<Self::Error>> {
         let (socket_addr, version, peer_id) =
             self.remote_multiaddr_to_socketaddr(addr.clone(), true)?;
+
+        if let Some(port_use) = self.force_port_use {
+            dial_opts.port_use = port_use;
+        }
 
         match (dial_opts.role, dial_opts.port_use) {
             (Endpoint::Dialer, _) | (Endpoint::Listener, PortUse::Reuse) => {

@@ -361,7 +361,7 @@ impl EnabledHandler {
                             return Poll::Ready(ConnectionHandlerEvent::NotifyBehaviour(message));
                         }
                         Poll::Ready(Some(Err(error))) => {
-                            tracing::debug!("Failed to read from inbound stream: {error}");
+                            tracing::debug!("Failed to read from inbound stream: {error:?}");
                             // Close this side of the stream. If the
                             // peer is still around, they will re-establish their
                             // outbound stream i.e. our inbound stream.

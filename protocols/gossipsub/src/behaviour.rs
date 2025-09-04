@@ -2998,6 +2998,10 @@ where
                     }
                 }
             }
+
+            for topic_hash in self.mesh.clone().into_keys() {
+                self.send_message(peer_id, RpcOut::Subscribe(topic_hash));
+            }
         } else {
             // remove from mesh, topic_peers, peer_topic and the fanout
             tracing::debug!(peer=%peer_id, "Peer disconnected");
